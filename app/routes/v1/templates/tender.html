@@ -1,0 +1,17 @@
+{% extends "partials/base.html" %}
+{%block menu %}
+    {% include "partials/menu.html" %}
+{% endblock %} 
+
+{% block tenders %}
+    <div id="fh5co-about">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2 text-center heading-section animate-box">
+                    <h3>{{tender.title}}</h3>
+                    <p>{{tender.description}}.</p>
+                </div>
+            </div>
+        </div>  
+    </div>
+{% endblock %}

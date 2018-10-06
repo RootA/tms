@@ -1,0 +1,6 @@
+app/routes/v1/__pycache__
+app/routes/v1/__pycache__/*.pyc
+venv
+app.log
+.vscode
+.vscode/settings.json
