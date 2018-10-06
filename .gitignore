@@ -4,3 +4,7 @@ venv
 app.log
 .vscode
 .vscode/settings.json
+migrations
+migrations/*
+.vscode/*
+venv/*
