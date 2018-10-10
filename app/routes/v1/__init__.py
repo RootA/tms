@@ -56,16 +56,16 @@ def prefix_route(route_function, prefix='', mask='{0}{1}'):
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/tms'
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
 app.config['VERSION'] = 'v1'
-app.config['SECRET_KEY'] = 'ac76697c-2cdc-4987-9de3-27e00e4dce03'  # YOU MUST NEVER CHANGE THIS
+app.config['SECRET_KEY'] = ''  # YOU MUST NEVER CHANGE THIS
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['BCRYPT_LOG_ROUNDS'] = 13  # YOU MUST NEVER CHANGE THIS
 app.config['COMPANY_NAME'] = 'TMS'
 app.config['APP_NAME'] = 'TMS'
 app.config['CACHE_DURATION'] = 86400 ## Equal to a day
 
-app.config['S3_ACCESS_KEY'] = 'AKIAJTKKLLL63GRWVVEQ'
-app.config['S3_SECRET_KEY'] = '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'
-app.config['S3_BUCKET'] = 'olpejeta'
+app.config['S3_ACCESS_KEY'] = ''
+app.config['S3_SECRET_KEY'] = ''
+app.config['S3_BUCKET'] = ''
 app.config["S3_LOCATION"] = 'http://{0}.s3.amazonaws.com/'.format(app.config['S3_BUCKET'])
 app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 app.config['UPLOAD_FOLDER'] = 'docs/'
