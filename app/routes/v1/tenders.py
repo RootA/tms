@@ -18,25 +18,28 @@ def allowed_file(filename):
 		   filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 @app.route("/tenders")
-@cache.cached(timeout=app.config['CACHE_DURATION'])
+@cache.memoize()
 def tenders():
 	Logger(request.method, request.endpoint, request.url, 'Listing all tenders', request.headers.get('User-Agent'), request.accept_languages)
-	tenders = Tender.query.filter(Tender.application_close_date > datetime.now()).all()
-	data = []
-	for tender in tenders:
-		response = {}
-		response['public_id'] = tender.public_id
-		response['owner_id'] = tender.owner_id
-		response['created_at'] = Extenstion.convertDate(tender.created_at)
-		response['category_id'] = tender.category_id
-		response['title'] = tender.title
-		response['description'] = tender.description
-		response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
-		response['application_close_date'] = Extenstion.convertDate(tender.application_close_date)
-		response['category'] = Extenstion.getCategoryName(tender.category_id)
-		response['docs'] = Extenstion.getTenderDocuments(tender.public_id)
-		response['num_of_bids'] = Bid.query.filter_by(tender_id=tender.public_id).count()
-		data.append(response)
+	tenders = cache.get('all_tenders')
+	if tenders == None:
+		cache.set('all_tenders', tenders)
+		tenders = Tender.query.filter(Tender.application_close_date > datetime.now()).all()
+		data = []
+		for tender in tenders:
+			response = {}
+			response['public_id'] = tender.public_id
+			response['owner_id'] = tender.owner_id
+			response['created_at'] = Extenstion.convertDate(tender.created_at)
+			response['category_id'] = tender.category_id
+			response['title'] = tender.title
+			response['description'] = tender.description
+			response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
+			response['application_close_date'] = Extenstion.convertDate(tender.application_close_date)
+			response['category'] = Extenstion.getCategoryName(tender.category_id)
+			response['docs'] = Extenstion.getTenderDocuments(tender.public_id)
+			response['num_of_bids'] = Bid.query.filter_by(tender_id=tender.public_id).count()
+			data.append(response)
 	
 	db.session.close()
 
@@ -70,13 +73,15 @@ def createTender():
 	)
 
 	Tender.save_to_db(new_tender)
+	cache.delete('all_tenders')
 	responseObject = { "message"  : "Successfully saved added the tender" } 
 	return jsonify(responseObject), 200
 
 @app.route('/tenders/<public_id>')
+@cache.memoize()
 def getTender(public_id):
 	tender = Tender.query.filter_by(public_id=public_id).first()
-
+	
 	if not tender:
 		responseObject = {
 			'message' : 'No such tender can be found'

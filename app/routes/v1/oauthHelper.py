@@ -1,13 +1,31 @@
 from flask import Flask, jsonify, request, render_template, render_template_string
 from routes.v1 import app, cache, db, Logger, bcrypt
-import requests
+import requests, uuid, jwt
 from flask_bcrypt import Bcrypt
 
-from database.users import Usertype, User
+from database.users import Usertype, User, Token
 
 from datetime import datetime, timedelta
 
 class OAuth:
+	def createUserType(payload):
+		name = payload['name'].upper()
+		is_type = Usertype.query.filter_by(name=name).all()
+
+		if is_type:
+			return jsonify({'message':'That usertype already exists'}), 412
+		
+		new_type = Usertype(
+			public_id = str(uuid.uuid4()),
+			name = payload['name'],
+			description = payload['description'],
+			created_by = payload['session_id'],
+			created_at = datetime.now(),
+			updated_at = datetime.now()
+		)
+		Usertype.save_to_db(new_type)
+		return jsonify({'message' : 'Successfully added the usertype'}), 200
+
 	def getUsertypes():
 		types = Usertype.query.filter(Usertype.deletion_marker == None).all()
 
@@ -19,13 +37,15 @@ class OAuth:
 			response = {}
 			response['name'] = data.name
 			response['description'] = data.description
+			response['public_id'] = data.public_id
 			types_array.append(response)
-		return types_array
+		return jsonify({'data': types_array}), 200
 	
 	def userSignup(payload):
 		if payload:
 			password = str(uuid.uuid4())[:10] # generates a random string to act as a system generated password
 			u_ublic_id = str(uuid.uuid4())[:15]
+			print("password", password)
 			new_user = User(
 				public_id = u_ublic_id,
 				first_name = payload['first_name'],
@@ -33,13 +53,14 @@ class OAuth:
 				email = payload['email'],
 				phone_number = payload['phone_number'],
 				description = payload['description'],
+				address = payload['address'],
 				company_name = payload['company_name'],
 				type_id = payload['type_id'],
 				category_id = payload['category_id'],
 				password = bcrypt.generate_password_hash(password, app.config['BCRYPT_LOG_ROUNDS']).decode('utf-8'),
 				created_at = datetime.now()
 			)
-			db.session.add(new_user)
+			User.save_to_db(new_user)
 			
 			#generate and auth token 
 			payload = {
@@ -56,5 +77,28 @@ class OAuth:
 				scopes = '[]',
 				created_at = datetime.now()
 			)
-			db.session.add(token)
-		
+			Token.save_to_db(token)
+			return jsonify({'message' : 'Welcome to {}, check your mail for your account details'.format(app.config['APP_NAME'])}), 200
+
+	def getAllUsers():
+		users = User.query.all()
+
+		if not users:
+			return jsonify({'message' : 'No users found'}), 422
+
+		data = []
+		for user in users:
+			response = {}
+			user_type, = db.session.query(Usertype.name).filter_by(public_id=user.type_id).first()
+			response['public_id'] = user.public_id
+			response['first_name'] = user.first_name
+			response['last_name'] = user.last_name
+			response['email'] = user.email
+			response['phone_number'] = user.phone_number
+			response['user_type'] = user_type
+			response['company_name'] = user.company_name
+			response['created_at'] = user.created_at
+			response['address'] = user.address
+			response['status'] = "Active" if user.status == 5 else "Inactive"	
+			data.append(response)
+		return jsonify({'data':data}), 200	

@@ -29,7 +29,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 	autoescape=True)
 	
 app = Flask(__name__)
-cache = Cache(app,config={'CACHE_TYPE': 'simple'})
+cache = Cache()
 CORS(app)
 
 def close(self):
@@ -74,32 +74,59 @@ JINJA_ENVIRONMENT.globals['STATIC_PREFIX'] = '/'
 
 app.route = prefix_route(app.route, '/api/{0}'.format(app.config['VERSION']))
 
+app.config['MEMCACHIER_USERNAME'] = 'B94B15'
+app.config['MEMCACHIER_PASSWORD'] = '04CE925B3E939FE4A0C5A6333ED49122'
+app.config['MEMCACHIER_SERVERS'] = 'mc3.c1.eu-central-1.ec2.memcachier.com:11211'
+
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 
-# @app.template_filter('strftime')
-# def _jinja2_filter_datetime(date, fmt=None):
-# 	date = dateutil.parser.parse(date)
-# 	native = date.replace(tzinfo=None)
-# 	format='%b %d, %Y'
-# 	return native.strftime(format)
+cache_servers = app.config['MEMCACHIER_SERVERS']
+if cache_servers == None:
+	# Fall back to simple in memory cache (development)
+	cache.init_app(app, config={'CACHE_TYPE': 'simple'})
+else:
+	cache_user = app.config['MEMCACHIER_USERNAME'] or ''
+	cache_pass = app.config['MEMCACHIER_PASSWORD'] or ''
+	cache.init_app(app,
+		config={'CACHE_TYPE': 'saslmemcached',
+				'CACHE_MEMCACHED_SERVERS': cache_servers.split(','),
+				'CACHE_MEMCACHED_USERNAME': cache_user,
+				'CACHE_MEMCACHED_PASSWORD': cache_pass})
 
-# def format_datetime(value, format='medium'):
-# 	if format == 'full':
-# 		format="EEEE, d. MMMM y 'at' HH:mm"
-# 	elif format == 'medium':
-# 		format="EE dd.MM.y HH:mm"
-# 	return babel.dates.format_datetime(value, format)
+# cache_servers = app.config['MEMCACHIER_SERVERS']
+# if cache_servers == None:
+# 	cache.init_app(app, config={'CACHE_TYPE': 'simple'})
+# else:
+# 	cache_user = app.config['MEMCACHIER_USERNAME'] or ''
+# 	cache_pass = app.config['MEMCACHIER_PASSWORD'] or ''
+# 	cache.init_app(app,
+# 		config=
+# 			{
+# 				'CACHE_TYPE': 'saslmemcached',
+# 				'CACHE_MEMCACHED_SERVERS': cache_servers.split(','),
+# 				'CACHE_MEMCACHED_USERNAME': cache_user,
+# 				'CACHE_MEMCACHED_PASSWORD': cache_pass,
+# 				'CACHE_OPTIONS': 
+# 					{ 
+# 						'behaviors': {
+# 							# Faster IO
+# 							'tcp_nodelay': True,
+# 							# Keep connection alive
+# 							'tcp_keepalive': True,
+# 							# Timeout for set/get requests
+# 							'connect_timeout': 2000, # ms
+# 							'send_timeout': 750 * 1000, # us
+# 							'receive_timeout': 750 * 1000, # us
+# 							'_poll_timeout': 2000, # ms
+# 							# Better failover
+# 							'ketama': True,
+# 							'remove_failed': 1,
+# 							'retry_timeout': 2,
+# 							'dead_timeout': 30
+# 						}
+# 					}
+# 			}
+# 		)
 
-# app.jinja_env.filters['datetime'] = format_datetime
-
-
-# @app.template_filter('getdays')
-# def _jinja2_getdays_datetime(date):
-# 	date_format = "%m/%d/%Y"
-# 	a = datetime.strptime(datetime.now(), date_format)
-# 	b = datetime.strptime(date, date_format)
-# 	delta = a - b
-# 	return delta.days
-
-from routes.v1 import base_urls, oauthHelper, tenders, login, extensionHelpers, bid
+from routes.v1 import base_urls, oauthHelper, tenders, login, extensionHelpers, bid, signup, users
