@@ -101,7 +101,7 @@ if __name__ == '__main__':
 	# Configure the server object
 	server.socket_host = "0.0.0.0"
 	server.socket_port = 5000
-	server.thread_pool = 30
+	server.thread_pool = 100
 	server.log = True
 	server.screen = True
 

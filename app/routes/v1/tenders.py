@@ -43,11 +43,12 @@ def tenders():
 	
 	db.session.close()
 
-	responseObject = {
-		'data' : data,
-		'len' : len(tenders)
-	}
-	return jsonify(responseObject), 200
+	# responseObject = {
+	# 	'data' : data,
+	# 
+	# 	'len' : len(tenders)
+	# }
+	return jsonify(data), 200
 
 
 @app.route('/create/tender', methods=['POST'])
