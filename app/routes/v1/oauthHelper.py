@@ -43,7 +43,8 @@ class OAuth:
 	
 	def userSignup(payload):
 		if payload:
-			password = str(uuid.uuid4())[:10] # generates a random string to act as a system generated password
+			password = '123456'
+			# password = str(uuid.uuid4())[:10] # generates a random string to act as a system generated password
 			u_ublic_id = str(uuid.uuid4())[:15]
 			print("password", password)
 			new_user = User(

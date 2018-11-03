@@ -21,31 +21,31 @@ def allowed_file(filename):
 @cache.memoize()
 def tenders():
 	Logger(request.method, request.endpoint, request.url, 'Listing all tenders', request.headers.get('User-Agent'), request.accept_languages)
-	tenders = cache.get('all_tenders')
-	if tenders == None:
-		cache.set('all_tenders', tenders)
-		tenders = Tender.query.filter(Tender.application_close_date > datetime.now()).all()
-		data = []
-		for tender in tenders:
-			response = {}
-			response['public_id'] = tender.public_id
-			response['owner_id'] = tender.owner_id
-			response['created_at'] = Extenstion.convertDate(tender.created_at)
-			response['category_id'] = tender.category_id
-			response['title'] = tender.title
-			response['description'] = tender.description
-			response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
-			response['application_close_date'] = Extenstion.convertDate(tender.application_close_date)
-			response['category'] = Extenstion.getCategoryName(tender.category_id)
-			response['docs'] = Extenstion.getTenderDocuments(tender.public_id)
-			response['num_of_bids'] = Bid.query.filter_by(tender_id=tender.public_id).count()
-			data.append(response)
-	
+	# tenders = cache.get('all_tenders')
+	# if tenders == None:
+	# 	cache.set('all_tenders', tenders)
+	tenders = Tender.query.filter(Tender.application_close_date > datetime.now()).all()
+	data = []
+	for tender in tenders:
+		response = {}
+		response['public_id'] = tender.public_id
+		response['owner_id'] = tender.owner_id
+		response['company_name'] = Extenstion.getCompanyName(tender.owner_id)
+		response['created_at'] = Extenstion.convertDate(tender.created_at)
+		response['category_id'] = tender.category_id
+		response['title'] = tender.title.upper()
+		response['description'] = tender.description
+		response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
+		response['application_close_date'] = Extenstion.convertDate(tender.application_close_date)
+		response['category'] = Extenstion.getCategoryName(tender.category_id)
+		response['docs'] = Extenstion.getTenderDocuments(tender.public_id)
+		response['num_of_bids'] = Bid.query.filter_by(tender_id=tender.public_id).count()
+		data.append(response)
+
 	db.session.close()
 
 	# responseObject = {
 	# 	'data' : data,
-	# 
 	# 	'len' : len(tenders)
 	# }
 	return jsonify(data), 200
@@ -53,13 +53,14 @@ def tenders():
 
 @app.route('/create/tender', methods=['POST'])
 def createTender():
-	category_id = request.json.get('category_id')
-	type_id = request.json.get('type_id')
-	owner_id = request.json.get('owner_id')
-	title = request.json.get('title')
+	print(request.mimetype)
+	category_id = request.json['category_id']
+	type_id = request.json['type_id']
+	owner_id = request.json['owner_id']
+	title = request.json['title']
 	description = request.json['description']
-	application_start_date = request.json.get('application_start_date')
-	application_close_date = request.json.get('application_close_date')
+	application_start_date = request.json['application_start_date']
+	application_close_date = request.json['application_close_date']
 
 	new_tender = Tender(
 		public_id = str(uuid.uuid4()),
@@ -74,7 +75,7 @@ def createTender():
 	)
 
 	Tender.save_to_db(new_tender)
-	cache.delete('all_tenders')
+	# cache.delete('all_tenders')
 	responseObject = { "message"  : "Successfully saved added the tender" } 
 	return jsonify(responseObject), 200
 
@@ -105,13 +106,14 @@ def getTender(public_id):
 	responseObject = {
 			'public_id' : tender.public_id,
 			'category_id' : tender.category_id,
-			'title' : tender.title,
+			'title' : tender.title.upper(),
 			'description' : tender.description,
 			'application_start_date' : Extenstion.convertDate(tender.application_start_date),
 			'application_close_date' : Extenstion.convertDate(tender.application_close_date),
 			'category' :  Extenstion.getCategoryName(tender.category_id),
 			'created_at' : Extenstion.convertDate(tender.created_at),
 			'owner_id' : tender.owner_id,
+			'company_name' : Extenstion.getCompanyName(tender.owner_id),
 			'bids' : bids,
 			'docs' : Extenstion.getTenderDocuments(tender.public_id)
 	}

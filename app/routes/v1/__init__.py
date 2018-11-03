@@ -76,8 +76,8 @@ app.route = prefix_route(app.route, '/api/{0}'.format(app.config['VERSION']))
 
 app.config['MEMCACHIER_USERNAME'] = 'B94B15'
 app.config['MEMCACHIER_PASSWORD'] = '04CE925B3E939FE4A0C5A6333ED49122'
-app.config['MEMCACHIER_SERVERS'] = 'mc3.c1.eu-central-1.ec2.memcachier.com:11211'
-
+# app.config['MEMCACHIER_SERVERS'] = 'mc3.c1.eu-central-1.ec2.memcachier.com:11211'
+app.config['MEMCACHIER_SERVERS'] = None
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 

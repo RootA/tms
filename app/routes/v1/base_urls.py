@@ -5,13 +5,38 @@ import requests
 # sys.setrecursionlimit(10000)
 
 from database.tenders import Category
+from database.users import User, Usertype
 
 @app.route("/")
 # @cache.cached(timeout=app.config['CACHE_DURATION'])
 def index():
 	Logger(request.method, request.endpoint, request.url, 'Welcome to the home page', request.headers.get('User-Agent'), request.accept_languages)
 	categories = Category.query.all()
-	return render_template('home.html', name=app.config['APP_NAME'], categories=categories)
+	if not categories:
+		return []
+	output = []
+	for category in categories:
+		response = {}
+		response['name'] = category.name
+		response['description'] = category.description
+		response['public_id'] =  category.public_id
+		output.append(response)
+	return jsonify(output), 200
+
+@app.route('/usertypes')
+def getUsertypes():
+	usertypes = Usertype.query.filter(Usertype.name != 'Admin').all()
+	if not usertypes:
+		return []
+	output = []
+	for usertype in usertypes:
+		response = {}
+		response['name'] = usertype.name
+		response['description'] = usertype.description
+		response['public_id'] = usertype.public_id
+		output.append(response)
+	return jsonify(output), 200
+
 
 
 @app.errorhandler(404)

@@ -6,6 +6,7 @@ import requests
 from datetime import datetime, timedelta
 
 from database.tenders import Category, Tender, Document, BidDocument
+from database.users import User
 
 class Extenstion:
 	def getCategoryName(id):
@@ -13,13 +14,20 @@ class Extenstion:
 		return name if name else "N/A"
 	
 	def convertDate(timestamp):
-		date = timestamp.strftime("%a,%b %Y")
+		date = timestamp.strftime("%a, %b %Y")
 		return date
 	
 	def cal_days_diff(a,b):
 		A = a.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
 		B = b.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
 		return (A - B).days
+	
+	def getCompanyName(public_id):
+		is_user= User.query.filter_by(public_id=public_id).first()
+		if not is_user:
+			return 'NA'
+		return is_user.company_name
+
 	
 	def getUserName(id):
 		response = {
@@ -74,6 +82,7 @@ class Extenstion:
 		for doc in docs:
 			response = {}
 			response['doc_url'] = doc.doc_url
+			response['public_id'] = doc.public_id
 			files.append(response)
 		
 		return files
