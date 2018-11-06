@@ -25,13 +25,14 @@ def getLogin():
 				'public_id' : is_user.public_id,
 				'first_name' : is_user.first_name,
 				'last_name' : is_user.last_name,
+				'email' : is_user.email,
+				'phone_number' : is_user.phone_number,
 				'full_name' : '{} {}'.format(is_user.first_name, is_user.last_name),
 				'company_name' : is_user.company_name,
 				'user_type' : db.session.query(Usertype.name).filter_by(public_id=is_user.type_id).first()[0],
 				'auth_token' :  auth_token.decode(),
 				'type_id' : is_user.type_id
 			}
-			print(responseObject)
 			return jsonify(responseObject), 200
 	return jsonify({'message' : 'Invalid credentials'}), 422
 	

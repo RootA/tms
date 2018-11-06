@@ -47,7 +47,7 @@ class Extenstion:
 		responseObject = {
 			'public_id' : tender.public_id,
 			'category_id' : tender.category_id,
-			'title' : tender.title,
+			'title' : (tender.title).upper(),
 			'description' : tender.description,
 			'application_start_date' : Extenstion.convertDate(tender.application_start_date),
 			'application_close_date' : Extenstion.convertDate(tender.application_close_date),

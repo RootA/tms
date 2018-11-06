@@ -47,7 +47,7 @@ def applyForTender():
 	)
 	Bid.save_to_db(new_bid)
 	response = {
-		'message' : 'You have successfully applied for the {} tender'.format(tender.title)
+		'message' : 'You have successfully applied for the tender'
 	}
 	return jsonify(response), 200
 

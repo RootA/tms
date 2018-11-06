@@ -24,7 +24,7 @@ def tenders():
 	# tenders = cache.get('all_tenders')
 	# if tenders == None:
 	# 	cache.set('all_tenders', tenders)
-	tenders = Tender.query.filter(Tender.application_close_date > datetime.now()).all()
+	tenders = Tender.query.filter_by(status=5).filter(Tender.application_close_date > datetime.now()).all()
 	data = []
 	for tender in tenders:
 		response = {}
@@ -118,6 +118,29 @@ def getTender(public_id):
 			'docs' : Extenstion.getTenderDocuments(tender.public_id)
 	}
 	return jsonify(responseObject), 200
+
+@app.route('/my/tenders/<public_id>')
+@cache.memoize()
+def getMyTenders(public_id):
+	bids = Bid.query.filter_by(supplier_id=public_id).all()
+	if not bids:
+		return jsonify({'message' : 'No bids currently'}), 200
+	
+	tenders = []
+	for bid in bids:
+		response = {}
+		response['amount'] = int(bid.amount)
+		response['status'] = 'Received' if bid.status == 5 else "Acccepted"
+		response['supplier'] = Extenstion.getUserName(bid.supplier_id)
+		response['duration'] = bid.duration
+		response['applied_at'] = Extenstion.convertDate(bid.created_at)
+		response['public_id'] = bid.public_id
+		response['tender'] = Extenstion.getTenderData(bid.tender_id)
+		response['docs'] = Extenstion.getBidDocuments(bid.public_id)
+		tenders.append(response)
+	return jsonify(tenders), 200
+
+
 
 @app.route('/tender/doc/upload/<public_id>', methods=['POST'])
 def upload_tender_file(public_id):
