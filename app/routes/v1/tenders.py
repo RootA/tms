@@ -34,6 +34,7 @@ def tenders():
 		response['created_at'] = Extenstion.convertDate(tender.created_at)
 		response['category_id'] = tender.category_id
 		response['title'] = tender.title.upper()
+		response['status'] = 'Active' if tender.status == 5 else 'Awarded'
 		response['description'] = tender.description
 		response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
 		response['application_close_date'] = Extenstion.convertDate(tender.application_close_date)
@@ -43,11 +44,32 @@ def tenders():
 		data.append(response)
 
 	db.session.close()
+	return jsonify(data), 200
 
-	# responseObject = {
-	# 	'data' : data,
-	# 	'len' : len(tenders)
-	# }
+@app.route("/all/tenders")
+@cache.memoize()
+def Alltenders():
+	Logger(request.method, request.endpoint, request.url, 'Listing all tenders', request.headers.get('User-Agent'), request.accept_languages)
+	tenders = Tender.query.filter_by(status=5).all()
+	data = []
+	for tender in tenders:
+		response = {}
+		response['public_id'] = tender.public_id
+		response['owner_id'] = tender.owner_id
+		response['company_name'] = Extenstion.getCompanyName(tender.owner_id)
+		response['created_at'] = Extenstion.convertDate(tender.created_at)
+		response['category_id'] = tender.category_id
+		response['title'] = tender.title.upper()
+		response['status'] = 'Active' if tender.status == 5 else 'Awarded'
+		response['description'] = tender.description
+		response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
+		response['application_close_date'] = Extenstion.convertDate(tender.application_close_date)
+		response['category'] = Extenstion.getCategoryName(tender.category_id)
+		response['docs'] = Extenstion.getTenderDocuments(tender.public_id)
+		response['num_of_bids'] = Bid.query.filter_by(tender_id=tender.public_id).count()
+		data.append(response)
+
+	db.session.close()
 	return jsonify(data), 200
 
 
@@ -104,7 +126,7 @@ def getTender(public_id):
 		bids.append(response)
 
 	responseObject = {
-			'public_id' : tender.public_id,
+			'public_id' : tender.public_id.upper(),
 			'category_id' : tender.category_id,
 			'title' : tender.title.upper(),
 			'description' : tender.description,
@@ -115,6 +137,7 @@ def getTender(public_id):
 			'owner_id' : tender.owner_id,
 			'company_name' : Extenstion.getCompanyName(tender.owner_id),
 			'bids' : bids,
+			'num_of_bids': len(bids),
 			'docs' : Extenstion.getTenderDocuments(tender.public_id)
 	}
 	return jsonify(responseObject), 200

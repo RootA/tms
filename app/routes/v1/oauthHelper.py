@@ -4,6 +4,7 @@ import requests, uuid, jwt
 from flask_bcrypt import Bcrypt
 
 from database.users import Usertype, User, Token
+from .extensionHelpers import Extenstion
 
 from datetime import datetime, timedelta
 
@@ -98,8 +99,8 @@ class OAuth:
 			response['phone_number'] = user.phone_number
 			response['user_type'] = user_type
 			response['company_name'] = user.company_name
-			response['created_at'] = user.created_at
+			response['created_at'] = Extenstion.convertDate(user.created_at)
 			response['address'] = user.address
 			response['status'] = "Active" if user.status == 5 else "Inactive"	
 			data.append(response)
-		return jsonify({'data':data}), 200	
+		return jsonify(data), 200	
