@@ -127,7 +127,7 @@ def getTender(public_id):
 		bids.append(response)
 
 	responseObject = {
-			'public_id' : tender.public_id.upper(),
+			'public_id' : tender.public_id,
 			'category_id' : tender.category_id,
 			'title' : tender.title.upper(),
 			'description' : tender.description,
@@ -138,6 +138,7 @@ def getTender(public_id):
 			'owner_id' : tender.owner_id,
 			'company_name' : Extenstion.getCompanyName(tender.owner_id),
 			'bids' : bids,
+			'tender_code' : tender.tender_code,
 			'num_of_bids': len(bids),
 			'docs' : Extenstion.getTenderDocuments(tender.public_id)
 	}
@@ -186,6 +187,7 @@ def getOrgTenders(public_id):
 		response['tender_code'] = (bid.tender_code).upper()
 		response['docs'] = Extenstion.getTenderDocuments(bid.public_id)
 		response['num_of_bids'] = Bid.query.filter_by(tender_id=bid.public_id).count()
+		response['doc_count'] =  Document.query.filter_by(tender_id=bid.public_id).count()
 		tenders.append(response)
 	return jsonify(tenders), 200
 
