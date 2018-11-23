@@ -4,8 +4,10 @@ import requests
 # import sys
 # sys.setrecursionlimit(10000)
 
-from database.tenders import Category
+from database.tenders import Category, Type
 from database.users import User, Usertype
+from .extensionHelpers import Extenstion
+
 
 @app.route("/")
 # @cache.cached(timeout=app.config['CACHE_DURATION'])
@@ -20,6 +22,25 @@ def index():
 		response['name'] = category.name
 		response['description'] = category.description
 		response['public_id'] =  category.public_id
+		response['created_at'] = Extenstion.convertDate(category.created_at)
+		response['status'] = 'Active' if category.status == 5 else 'In Active'
+		output.append(response)
+	return jsonify(output), 200
+
+@app.route("/types")
+# @cache.cached(timeout=app.config['CACHE_DURATION'])
+def indexTypes():
+	categories = Type.query.all()
+	if not categories:
+		return []
+	output = []
+	for category in categories:
+		response = {}
+		response['name'] = category.name
+		response['description'] = category.description
+		response['public_id'] =  category.public_id
+		response['created_at'] = Extenstion.convertDate(category.created_at)
+		response['status'] = 'Active' if category.status == 5 else 'In Active'
 		output.append(response)
 	return jsonify(output), 200
 

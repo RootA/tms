@@ -12,7 +12,7 @@ class Extenstion:
 	def getCategoryName(id):
 		name, = db.session.query(Category.name).filter_by(public_id = id).first()
 		return name if name else "N/A"
-	
+
 	def convertDate(timestamp):
 		date = timestamp.strftime("%a, %b %Y")
 		return date
@@ -30,11 +30,16 @@ class Extenstion:
 
 	
 	def getUserName(id):
+		user_details = User.query.filter_by(public_id=id).first()
+		if not user_details:
+			return "N/A"
+		
 		response = {
-			'fullname' : "Ruth Njeri",
-			'email' : 'x@gmail.com',
-			'phone_number' : '254899888832',
-			'company' : "SafariIoT"
+			'fullname' : "{} {}".format(user_details.first_name, user_details.last_name),
+			'email' : user_details.email,
+			'phone_number' : user_details.phone_number,
+			'company' : user_details.company_name,
+			'public_id' : user_details.public_id
 		}
 		return response
 
@@ -46,6 +51,7 @@ class Extenstion:
 		
 		responseObject = {
 			'public_id' : tender.public_id,
+			'tender_code' : (tender.tender_code).upper(),
 			'category_id' : tender.category_id,
 			'title' : (tender.title).upper(),
 			'description' : tender.description,

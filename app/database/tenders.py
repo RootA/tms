@@ -44,6 +44,7 @@ class Tender(db.Model, TimestampMixin, BaseTracker):
 	description = db.Column(db.Text, nullable=False)
 	application_start_date = db.Column(db.DateTime)
 	application_close_date = db.Column(db.DateTime)
+	tender_code = db.Column(db.String(20), index=True, unique=True)
 	documents = db.relationship('Document', backref='tender', lazy=True)
 
 	def save_to_db(self):

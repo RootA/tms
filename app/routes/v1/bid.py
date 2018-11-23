@@ -51,7 +51,7 @@ def applyForTender():
 	}
 	return jsonify(response), 200
 
-@app.route('/bid/public_id')
+@app.route('/bid<public_id>')
 def getBidInfo(public_id):
 	bid = Bid.query.filter_by(public_id=public_id).filter(Bid.deletion_marker==None).first()
 
@@ -62,13 +62,47 @@ def getBidInfo(public_id):
 	responseObject = {
 		'supplier_id' : bid.supplier_id,
 		'supplier' : Extenstion.getUserName(bid.supplier_id),
-		'amount' : bid.amount,
+		'amount' : 'KES {:2,.2f}'.format(int(bid.amount)),
 		'duration' : bid.duration,
 		'applied_at' : Extenstion.convertDate(bid.created_at),
 		'public_id' : public_id,
 		'docs' : Extenstion.getBidDocuments(bid.public_id)
 	}
 	return jsonify(responseObject), 200
+
+@app.route('/my/bids/<public_id>')
+def getMyBids(public_id):
+	bids = Bid.query.filter_by(supplier_id=public_id).filter(Bid.deletion_marker==None).all()
+
+	if not bids:
+		response = {'message' : 'No bids can be found on our records'}
+		return jsonify(response), 422
+	
+	data = []
+
+	for bid in bids:
+		response = {}
+		response['public_id'] = bid.public_id
+		response['applied_at'] = Extenstion.convertDate(bid.created_at)
+		response['docs'] =  Extenstion.getBidDocuments(bid.public_id)
+		response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
+		response['duration'] = bid.duration
+		response['tender'] = Extenstion.getTenderData(bid.tender_id)
+		response['status'] = 'Pending' if bid.status == 5 else "Active"
+		data.append(response)
+
+	return jsonify(data), 200
+
+@app.route('/terminate/bid/<public_id>')
+def terminateBid(public_id):
+	bid = Bid.query.filter_by(public_id=public_id).filter(Bid.deletion_marker==None).first()
+
+	if not bid:
+		return jsonify({'message' : 'No such bid can be found'}), 412
+	
+	bid.status = 10 # denotes a user terminated bid
+	db.session.commit()
+	return jsonify({'message' : 'Termiated your bid'}), 200
 
 @app.route('/bids')
 def getAllBids():
@@ -82,7 +116,7 @@ def getAllBids():
 	for bid in bids:
 		response = {}
 		response['supplier_id'] = bid.supplier_id
-		response['amount'] = int(bid.amount)
+		response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
 		response['supplier'] = Extenstion.getUserName(bid.supplier_id)
 		response['duration'] = bid.duration
 		response['applied_at'] = Extenstion.convertDate(bid.created_at)
@@ -91,10 +125,7 @@ def getAllBids():
 		response['docs'] = Extenstion.getBidDocuments(bid.public_id)
 		bid_data.append(response)
 	
-	responseObject = {
-		'data' : bid_data
-	}
-	return jsonify(responseObject), 200
+	return jsonify(bid_data), 200
 
 
 @app.route('/bid/doc/upload/<public_id>', methods=['POST'])

@@ -24,7 +24,7 @@ def tenders():
 	# tenders = cache.get('all_tenders')
 	# if tenders == None:
 	# 	cache.set('all_tenders', tenders)
-	tenders = Tender.query.filter_by(status=5).filter(Tender.application_close_date > datetime.now()).all()
+	tenders = Tender.query.filter_by(status=5).filter(Tender.application_close_date > datetime.now()).order_by(Tender.application_close_date.asc())
 	data = []
 	for tender in tenders:
 		response = {}
@@ -90,6 +90,7 @@ def createTender():
 		type_id = type_id,
 		owner_id = owner_id,
 		title = title,
+		tender_code = "T{}".format(str(uuid.uuid4())[:5]),
 		description = description,
 		application_start_date = application_start_date,
 		application_close_date = application_close_date,
@@ -117,7 +118,7 @@ def getTender(public_id):
 	for bid in bid_data:
 		response = {}
 		response['supplier_id'] = bid.supplier_id
-		response['amount'] = int(bid.amount)
+		# response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
 		response['supplier'] = Extenstion.getUserName(bid.supplier_id)
 		response['duration'] = bid.duration
 		response['applied_at'] = Extenstion.convertDate(bid.created_at)
@@ -152,7 +153,7 @@ def getMyTenders(public_id):
 	tenders = []
 	for bid in bids:
 		response = {}
-		response['amount'] = int(bid.amount)
+		response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
 		response['status'] = 'Received' if bid.status == 5 else "Acccepted"
 		response['supplier'] = Extenstion.getUserName(bid.supplier_id)
 		response['duration'] = bid.duration
@@ -163,7 +164,30 @@ def getMyTenders(public_id):
 		tenders.append(response)
 	return jsonify(tenders), 200
 
-
+@app.route('/org/tenders/<public_id>')
+@cache.memoize()
+def getOrgTenders(public_id):
+	bids = Tender.query.filter_by(owner_id=public_id).all()
+	if not bids:
+		return jsonify({'message' : 'No tenders currently'}), 200
+	
+	tenders = []
+	for bid in bids:
+		response = {}
+		response['category_id'] = bid.category_id
+		response['category'] = Extenstion.getCategoryName(bid.category_id)
+		response['status'] = 'Received' if bid.status == 5 else "Acccepted"
+		response['application_start_date'] = Extenstion.convertDate(bid.application_start_date)
+		response['application_close_date'] = Extenstion.convertDate(bid.application_close_date)
+		response['applied_at'] = Extenstion.convertDate(bid.created_at)
+		response['public_id'] = bid.public_id
+		response['title'] = bid.title
+		response['type_id'] = bid.type_id
+		response['tender_code'] = (bid.tender_code).upper()
+		response['docs'] = Extenstion.getTenderDocuments(bid.public_id)
+		response['num_of_bids'] = Bid.query.filter_by(tender_id=bid.public_id).count()
+		tenders.append(response)
+	return jsonify(tenders), 200
 
 @app.route('/tender/doc/upload/<public_id>', methods=['POST'])
 def upload_tender_file(public_id):

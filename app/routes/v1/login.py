@@ -10,6 +10,7 @@ from .oauthHelper import OAuth
 
 @app.route('/login', methods=['POST'])
 def getLogin():
+	Logger(request.method, request.endpoint, request.url, 'Trying to login', request.headers.get('User-Agent'), request.accept_languages)
 	email = request.json['email']
 	password = request.json['password']
 
@@ -33,6 +34,7 @@ def getLogin():
 				'auth_token' :  auth_token.decode(),
 				'type_id' : is_user.type_id
 			}
+			print(responseObject)
 			return jsonify(responseObject), 200
 	return jsonify({'message' : 'Invalid credentials'}), 422
 	
