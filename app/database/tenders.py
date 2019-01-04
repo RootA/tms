@@ -79,6 +79,8 @@ class Bid(db.Model, TimestampMixin, BaseTracker):
 	supplier_id = db.Column(db.String(100), index=True)
 	amount = db.Column(db.Float(6,2), nullable=True)
 	duration = db.Column(db.Integer, nullable=False)
+	awarded_at = db.Column(db.DateTime, default=datetime.now())
+	awarded_by = db.Column(db.String(100))
 
 	def save_to_db(self):
 		db.session.add(self)

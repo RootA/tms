@@ -1,9 +1,7 @@
 from flask import Flask, jsonify, request, render_template, render_template_string
 from routes.v1 import app, cache, db, Logger
-import requests
-# import sys
-# sys.setrecursionlimit(10000)
-
+import requests, uuid
+from datetime import datetime, timedelta, date
 from database.tenders import Category, Type
 from database.users import User, Usertype
 from .extensionHelpers import Extenstion
@@ -58,6 +56,43 @@ def getUsertypes():
 		output.append(response)
 	return jsonify(output), 200
 
+@app.route('/post/categories', methods=['POST'])
+def AddCategory():
+	name = request.json['name']
+	description = request.json['description']
+
+	is_category = Category.query.filter_by(name=name).first()
+
+	if is_category:
+		return jsonify({'message' : 'Cannot add that category'}), 422
+	
+	new_category = Category(
+		public_id = str(uuid.uuid4()),
+		name= name,
+		description = description,
+		created_at = datetime.now()
+	)
+	new_category.save_to_db()
+	return jsonify({'message' : 'Succesfully saved the new category'}), 200
+
+@app.route('/type/categories', methods=['POST'])
+def AddType():
+	name = request.json['name']
+	description = request.json['description']
+
+	is_category = Type.query.filter_by(name=name).first()
+
+	if is_category:
+		return jsonify({'message' : 'Cannot add that type'}), 422
+	
+	new_category = Category(
+		public_id = str(uuid.uuid4()),
+		name= name,
+		description = description,
+		created_at = datetime.now()
+	)
+	new_category.save_to_db()
+	return jsonify({'message' : 'Succesfully saved the new category'}), 200
 
 
 @app.errorhandler(404)

@@ -80,7 +80,31 @@ class OAuth:
 				created_at = datetime.now()
 			)
 			Token.save_to_db(token)
-			return jsonify({'message' : 'Welcome to {}, check your mail for your account details'.format(app.config['APP_NAME'])}), 200
+
+			mail_payload = {
+				'name' : '{} {}'.format(payload['first_name'], payload['last_name']),
+				'confirm_account_url' : (app.config['CONFIRM_ACCOUNT_URL']).format(u_ublic_id),
+				'link_url' : (app.config['CONFIRM_ACCOUNT_URL']).format(u_ublic_id),
+				'product_name' : app.config['APP_NAME'],
+				'company_name' : app.config['COMPANY_NAME']
+			}
+
+			# Send an Email
+			sg = sendgrid.SendGridAPIClient(apikey=app.config['SENDGRID_API_KEY'])
+			from_email = Email(app.config['MAIL_ADDRESS'])
+			to_email = Email(payload['email'])
+			subject = "Welcome to {}".format(app.config['APP_NAME'])
+			content = Content("text/html", render_template('signup.html', data=mail_payload))
+			mail = Mail(from_email, subject, to_email, content)
+			
+			try:
+				response = sg.client.mail.send.post(request_body=mail.get())
+			
+				return jsonify({'message' : 'Welcome to {}, check your mail for your account details'.format(app.config['APP_NAME'])}), 200
+			except Exception as e:
+				return jsonify({"message": str(e)}), 422
+
+			# return jsonify({'message' : 'Welcome to {}, check your mail for your account details'.format(app.config['APP_NAME'])}), 200
 
 	def getAllUsers():
 		users = User.query.all()

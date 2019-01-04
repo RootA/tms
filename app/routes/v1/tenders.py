@@ -34,6 +34,7 @@ def tenders():
 		response['created_at'] = Extenstion.convertDate(tender.created_at)
 		response['category_id'] = tender.category_id
 		response['title'] = tender.title.upper()
+		response['tender_code'] = tender.tender_code
 		response['status'] = 'Active' if tender.status == 5 else 'Awarded'
 		response['description'] = tender.description
 		response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
@@ -59,6 +60,7 @@ def Alltenders():
 		response['company_name'] = Extenstion.getCompanyName(tender.owner_id)
 		response['created_at'] = Extenstion.convertDate(tender.created_at)
 		response['category_id'] = tender.category_id
+		response['tender_code'] = tender.tender_code
 		response['title'] = tender.title.upper()
 		response['status'] = 'Active' if tender.status == 5 else 'Awarded'
 		response['description'] = tender.description
@@ -105,6 +107,8 @@ def createTender():
 @app.route('/tenders/<public_id>')
 @cache.memoize()
 def getTender(public_id):
+	Logger(request.method, request.endpoint, request.url, 'single tender', request.headers.get('User-Agent'), request.accept_languages)
+
 	tender = Tender.query.filter_by(public_id=public_id).first()
 	
 	if not tender:
@@ -114,17 +118,22 @@ def getTender(public_id):
 		return jsonify(responseObject), 412
 
 	bids = []
-	bid_data = Bid.query.filter_by(tender_id=public_id).all()
+	awarded_bids = []
+
+	bid_data = Bid.query.filter_by(tender_id=public_id).filter(Bid.deletion_marker == None).all()
 	for bid in bid_data:
 		response = {}
 		response['supplier_id'] = bid.supplier_id
-		# response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
+		response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
 		response['supplier'] = Extenstion.getUserName(bid.supplier_id)
 		response['duration'] = bid.duration
 		response['applied_at'] = Extenstion.convertDate(bid.created_at)
 		response['public_id'] = bid.public_id
 		response['docs'] = Extenstion.getBidDocuments(bid.public_id)
-		bids.append(response)
+		if bid.status == 5:
+			bids.append(response)
+		else:
+			awarded_bids.append(response)
 
 	responseObject = {
 			'public_id' : tender.public_id,
@@ -138,8 +147,9 @@ def getTender(public_id):
 			'owner_id' : tender.owner_id,
 			'company_name' : Extenstion.getCompanyName(tender.owner_id),
 			'bids' : bids,
+			'awarded': awarded_bids,
 			'tender_code' : tender.tender_code,
-			'num_of_bids': len(bids),
+			'num_of_bids': len(bids) + len(awarded_bids),
 			'docs' : Extenstion.getTenderDocuments(tender.public_id)
 	}
 	return jsonify(responseObject), 200
@@ -155,15 +165,53 @@ def getMyTenders(public_id):
 	for bid in bids:
 		response = {}
 		response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
-		response['status'] = 'Received' if bid.status == 5 else "Acccepted"
+		response['status'] = 'Received' if bid.status == 5 else "Awarded"
 		response['supplier'] = Extenstion.getUserName(bid.supplier_id)
 		response['duration'] = bid.duration
 		response['applied_at'] = Extenstion.convertDate(bid.created_at)
+		# response['expected_complete_date'] = 
 		response['public_id'] = bid.public_id
 		response['tender'] = Extenstion.getTenderData(bid.tender_id)
 		response['docs'] = Extenstion.getBidDocuments(bid.public_id)
 		tenders.append(response)
 	return jsonify(tenders), 200
+
+
+@app.route('/award/tender/<tender_id>/<bid_id>/<supplier_id>/<session_id>')
+def awardTender(tender_id, bid_id, supplier_id, session_id):
+	is_awarded = Bid.query.filter_by(public_id=bid_id,status=10).first()
+
+	if is_awarded:
+		return jsonify({'message' : 'The tender is already awarded'}), 200
+	
+	bid = Bid.query.filter_by(public_id=bid_id,status=5).first()
+	bid.status = 10
+	bid.awarded_at = datetime.now()
+	bid.awarded_by = session_id
+
+	db.session.commit()
+
+	tender = Tender.query.filter_by(public_id=tender_id).filter(Tender.deletion_marker == None).first()
+
+	if tender:
+		tender.status = 10
+		db.session.commit()
+
+	return jsonify({'message' : 'Successfully awarded the bid'}), 200
+
+
+@app.route('/reject/tender/<tender_id>/<bid_id>')
+def rejectTender(tender_id, bid_id):
+	is_rejected = Bid.query.filter_by(public_id=bid_id).first()
+
+	if not is_rejected:
+		return jsonify({'message' : 'We cannot find the bid at the moment, try again later'}), 200
+	
+	bid = Bid.query.filter_by(public_id=bid_id,status=10).first()
+	bid.status = 5
+
+	db.session.commit()
+	return jsonify({'message' : 'Successfully awarded the bid'}), 200
 
 @app.route('/org/tenders/<public_id>')
 @cache.memoize()

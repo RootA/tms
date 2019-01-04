@@ -8,6 +8,10 @@ from database.users import Usertype, User
 # class imports
 from .oauthHelper import OAuth
 
+
+import sendgrid
+from sendgrid.helpers.mail import *
+
 @app.route('/add/type', methods=['POST'])
 def addType():
 	name = request.json['name']
@@ -67,3 +71,12 @@ def signup():
 		return OAuth.userSignup(payload)
 	except Exception as identifier:
 		return jsonify({'message' : str(identifier)}), 500
+
+@app.route('/account/confirm/<public_id>')
+def confirmAccount():
+	user = User.query.filter_by(public_id=public_id).first()
+
+	if not user:
+		return jsonify({'message' : 'Am afraid you are not in our database'}), 412
+	
+	return jsonify({'message' : 'Account has successfully been confirmed'}), 200

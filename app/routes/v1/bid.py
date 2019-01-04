@@ -21,6 +21,8 @@ def allowed_file(filename):
 ''' @param'''
 @app.route('/bid', methods=['POST'])
 def applyForTender():
+	Logger(request.method, request.endpoint, request.url, 'tender application', request.headers.get('User-Agent'), request.accept_languages)
+
 	tender_id = request.json['tender_id']
 	supplier_id = request.json['session_id']
 	amount = request.json['amount']
@@ -88,7 +90,7 @@ def getMyBids(public_id):
 		response['amount'] = 'KES {:2,.2f}'.format(int(bid.amount))
 		response['duration'] = bid.duration
 		response['tender'] = Extenstion.getTenderData(bid.tender_id)
-		response['status'] = 'Pending' if bid.status == 5 else "Active"
+		response['status'] = 'Pending' if bid.status == 5 else "Awarded"
 		data.append(response)
 
 	return jsonify(data), 200
@@ -130,6 +132,8 @@ def getAllBids():
 
 @app.route('/bid/doc/upload/<public_id>', methods=['POST'])
 def upload_file(public_id):
+	Logger(request.method, request.endpoint, request.url, 'Bid Doc upload', request.headers.get('User-Agent'), request.accept_languages)
+
 	if request.method == 'POST':
 		# check if the post request has the file part
 		if 'file' not in request.files:
@@ -190,4 +194,5 @@ def upload_file(public_id):
 					'message' : 'Could not upload image to remote server'
 				}
 				return make_response(jsonify(responseObject)), 500
+		return jsonify({'message' : 'File type not allowed'})
 

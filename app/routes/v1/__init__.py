@@ -61,6 +61,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['BCRYPT_LOG_ROUNDS'] = 13  # YOU MUST NEVER CHANGE THIS
 app.config['COMPANY_NAME'] = 'TMS'
 app.config['APP_NAME'] = 'TMS'
+app.config['MAIL_ADDRESS'] = 'accounts@tms.com'
 app.config['CACHE_DURATION'] = 86400 ## Equal to a day
 
 app.config['S3_ACCESS_KEY'] = ''
@@ -69,6 +70,9 @@ app.config['S3_BUCKET'] = ''
 app.config["S3_LOCATION"] = 'http://{0}.s3.amazonaws.com/'.format(app.config['S3_BUCKET'])
 app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 app.config['UPLOAD_FOLDER'] = 'docs/'
+
+app.config['CONFIRM_ACCOUNT_URL'] = 'http://localhost:5000/api/v1/account/confirm/{}'
+app.config['SENDGRID_API_KEY'] = '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'
 
 JINJA_ENVIRONMENT.globals['STATIC_PREFIX'] = '/'
 
