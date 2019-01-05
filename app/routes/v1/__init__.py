@@ -54,7 +54,7 @@ def prefix_route(route_function, prefix='', mask='{0}{1}'):
 	return newroute
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/tms'
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']#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'
 app.config['VERSION'] = 'v1'
 app.config['SECRET_KEY'] = ''  # YOU MUST NEVER CHANGE THIS
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -72,7 +72,7 @@ app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif
 app.config['UPLOAD_FOLDER'] = 'docs/'
 
 app.config['CONFIRM_ACCOUNT_URL'] = 'http://localhost:5000/api/v1/account/confirm/{}'
-app.config['SENDGRID_API_KEY'] = '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'
+app.config['SENDGRID_API_KEY'] = ''
 
 JINJA_ENVIRONMENT.globals['STATIC_PREFIX'] = '/'
 
