@@ -42,6 +42,10 @@ class Extenstion:
 			'public_id' : user_details.public_id
 		}
 		return response
+	
+	def getTenderCount(public_id):
+		num = Tender.query.filter_by(category_id=public_id).count()
+		return num if num else 0
 
 	def getTenderData(id):
 		tender = Tender.query.filter_by(public_id=id).first()
