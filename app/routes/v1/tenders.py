@@ -34,7 +34,7 @@ def tenders():
 		response['created_at'] = Extenstion.convertDate(tender.created_at)
 		response['category_id'] = tender.category_id
 		response['title'] = tender.title.upper()
-		response['tender_code'] = tender.tender_code
+		response['tender_code'] = tender.tender_code.upper()
 		response['status'] = 'Active' if tender.status == 5 else 'Awarded'
 		response['description'] = tender.description
 		response['application_start_date'] = Extenstion.convertDate(tender.application_start_date)
@@ -51,7 +51,7 @@ def tenders():
 @cache.memoize()
 def Alltenders():
 	Logger(request.method, request.endpoint, request.url, 'Listing all tenders', request.headers.get('User-Agent'), request.accept_languages)
-	tenders = Tender.query.filter_by(status=5).all()
+	tenders = Tender.query.all()
 	data = []
 	for tender in tenders:
 		response = {}
@@ -159,7 +159,7 @@ def getTender(public_id):
 def getMyTenders(public_id):
 	bids = Bid.query.filter_by(supplier_id=public_id).all()
 	if not bids:
-		return jsonify({'message' : 'No bids currently'}), 200
+		return jsonify({'message' : 'No Tenders currently'}), 412
 	
 	tenders = []
 	for bid in bids:
